@@ -1,7 +1,7 @@
 ---
 title: "FocusFlow"
 description: "FocusFlow is a browser extension that helps users stay productive by blocking distracting websites."
-image: "./project-imgs/focus-flow.png"
+image: "project-imgs/focus-flow.png"
 bannerImage: ""
 github: "https://github.com/pksh-labs/focus-flow"
 demo: "https://chromewebstore.google.com/detail/focusflow/mgmpbdbngmeahcjpgmadbjjffceiblmi"
