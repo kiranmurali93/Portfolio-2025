@@ -14,5 +14,6 @@ export default defineConfig({
       theme: 'github-light',
       wrap: true
     }
-  }
+  },
+  site: "https://kiranpk.dev/"
 });
