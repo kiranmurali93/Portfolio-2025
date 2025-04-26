@@ -26,7 +26,7 @@ const sortedProjects = projects.sort((a, b) => {
          {project.data.description}
         </div>
       </div>
-      <img src={project.data.image} alt="dictpress logo" class="w-24 h-auto object-contain" />
+      <img src={project.data.image} alt={project.data.title} class="w-24 h-auto object-contain" />
     </div>
         </a>
       ))}
