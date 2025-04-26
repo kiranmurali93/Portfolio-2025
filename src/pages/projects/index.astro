@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+const projects = await getCollection('projects');
+const sortedProjects = projects.sort((a, b) => {
+  if (a.data.featured && !b.data.featured) return -1;
+  if (!a.data.featured && b.data.featured) return 1;
+  return 0;
+});
+---
+
+<Layout title="Projects | Kiran PK">
+  <section class="py-16 max-w-4xl mx-auto px-4 sm:px-6">
+    <h1 class="text-4xl font-bold mb-8">Projects</h1>
+        <div class="max-w-5xl mx-auto space-y-12">
+      {sortedProjects.map(project => (
+        <a href={`/projects/${project.slug}`} class="group ">
+          <div class="flex items-start justify-between mb-3">
+      <div>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-500 text-2xl font-light">{project.data.year}</span>
+          <h2 class="text-orange-600 text-2xl font-semibold">{project.data.title}</h2>
+        </div>
+        <div class="mt-4 text-gray-700 text-lg max-w-2xl">
+         {project.data.description}
+        </div>
+      </div>
+      <img src={project.data.image} alt="dictpress logo" class="w-24 h-auto object-contain" />
+    </div>
+        </a>
+      ))}
+      </div>
+
+  </section>
+</Layout>

@@ -1,0 +1,144 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<Layout title={`${entry.data.title} | Kiran PK`}>
+  <article class="py-16 max-w-4xl mx-auto px-4 sm:px-6">
+    <header class="mb-12">
+      <a 
+        href="/projects" 
+        class="inline-flex items-center space-x-2 text-primary-600 hover:text-primary-700 transition-colors mb-8"
+      >
+        <span>←</span>
+        <span>Back to projects</span>
+      </a>
+      
+      <div class="flex items-baseline gap-4 mb-6">
+        <span class="text-gray-500 text-xl">{entry.data.year}</span>
+        <h1 class="text-4xl font-bold">{entry.data.title}</h1>
+      </div>
+      
+      <p class="text-xl text-gray-600 mb-8">{entry.data.description}</p>
+      
+      {entry.data.bannerImage && (
+        <div class="aspect-video rounded-xl overflow-hidden mb-8 bg-gray-100">
+          <img 
+            src={entry.data.bannerImage}
+            alt={entry.data.title}
+            class="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
+      <div class="flex gap-4">
+        {entry.data.github && (
+          <a 
+            href={entry.data.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <span>View on GitHub</span>
+          </a>
+        )}
+        
+        {entry.data.demo && (
+          <a 
+            href={entry.data.demo}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            <span>Live Demo</span>
+          </a>
+        )}
+      </div>
+    </header>
+    
+    <div class="prose prose-lg max-w-none">
+      <Content />
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .prose {
+    --tw-prose-body: #374151;
+    --tw-prose-headings: #111827;
+    --tw-prose-links: #2563eb;
+    --tw-prose-links-hover: #1d4ed8;
+    --tw-prose-underline: #e5e7eb;
+    --tw-prose-underline-hover: #d1d5db;
+    --tw-prose-bold: #111827;
+    --tw-prose-counters: #6b7280;
+    --tw-prose-bullets: #d1d5db;
+    --tw-prose-hr: #e5e7eb;
+    --tw-prose-quote-borders: #e5e7eb;
+    --tw-prose-captions: #6b7280;
+    --tw-prose-code: #111827;
+    --tw-prose-code-bg: #f3f4f6;
+    --tw-prose-pre-code: #e5e7eb;
+    --tw-prose-pre-bg: #1f2937;
+    --tw-prose-pre-border: #6b7280;
+  }
+
+  .prose :global(h1) {
+    @apply text-3xl font-bold mt-8 mb-4;
+  }
+
+  .prose :global(h2) {
+    @apply text-2xl font-semibold mt-8 mb-4;
+  }
+
+  .prose :global(h3) {
+    @apply text-xl font-semibold mt-6 mb-3;
+  }
+
+  .prose :global(p) {
+    @apply mb-4 leading-relaxed;
+  }
+
+  .prose :global(ul) {
+    @apply list-disc list-outside pl-5 mb-4;
+  }
+
+  .prose :global(li) {
+    @apply mb-2;
+  }
+
+  .prose :global(pre) {
+    @apply p-4 rounded-lg bg-gray-900 text-white overflow-x-auto mb-4;
+  }
+
+  .prose :global(code) {
+    @apply bg-gray-100 px-1.5 py-0.5 rounded text-gray-900;
+  }
+
+  .prose :global(pre code) {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .prose :global(blockquote) {
+    @apply border-l-4 border-gray-200 pl-4 italic my-4;
+  }
+
+  .prose :global(a) {
+    @apply text-primary-600 hover:text-primary-700 transition-colors;
+  }
+
+  .prose :global(img) {
+    @apply rounded-lg my-8;
+  }
+</style>

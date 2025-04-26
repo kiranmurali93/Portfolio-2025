@@ -1,0 +1,26 @@
+---
+const navItems = [
+  { title: "About Me", url: "/" },
+  { title: "Projects", url: "/projects" },
+  // { title: "Initiatives", url: "/initiatives" },
+];
+---
+
+<header class="py-6">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6">
+    <nav>
+      <ul class="flex justify-center space-x-12">
+        {navItems.map(item => (
+          <li>
+            <a 
+              href={item.url} 
+              class="text-gray-600 hover:text-gray-900 transition-colors duration-300 text-lg"
+            >
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
