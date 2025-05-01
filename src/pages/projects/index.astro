@@ -19,14 +19,15 @@ const sortedProjects = projects.sort((a, b) => {
           <div class="flex items-start justify-between mb-3">
       <div>
         <div class="flex items-center space-x-4">
-          <span class="text-gray-500 text-2xl font-light">{project.data.year}</span>
-          <h2 class="text-orange-600 text-2xl font-semibold">{project.data.title}</h2>
+          <span class="text-gray-500 text-xl font-light">{project.data.year}</span>
+          <h2 class="text-orange-600 text-xl font-semibold">{project.data.title}</h2>
         </div>
-        <div class="mt-4 text-gray-700 text-lg max-w-2xl">
+        <div class="mt-1 text-gray-700 text-base max-w-2xl">
          {project.data.description}
         </div>
       </div>
-      <img src={project.data.image} alt={project.data.title} class="w-24 h-auto object-contain" />
+      {project.data.image && <img src={project.data.image} alt={project.data.title} class="w-24 h-auto object-contain" />}
+      
     </div>
         </a>
       ))}
