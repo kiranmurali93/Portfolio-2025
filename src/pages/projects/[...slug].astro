@@ -1,17 +1,17 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
   return projects.map(entry => ({
-    params: { slug: entry.slug },
+    params: { slug: entry.id },
     props: { entry },
   }));
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+const { Content } = await render(entry);
 ---
 
 <Layout title={`${entry.data.title} | Kiran PK`}>
@@ -74,6 +74,8 @@ const { Content } = await entry.render();
 </Layout>
 
 <style>
+  @reference "../../styles/global.css";
+
   .prose {
     --tw-prose-body: #374151;
     --tw-prose-headings: #111827;

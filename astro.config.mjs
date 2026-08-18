@@ -1,14 +1,16 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import tailwind from '@astrojs/tailwind';
+import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [
-    tailwind(),
     mdx()
   ],
+  vite: {
+    plugins: [tailwindcss()]
+  },
   markdown: {
     shikiConfig: {
       theme: 'github-light',

@@ -15,7 +15,7 @@ const sortedProjects = projects.sort((a, b) => {
     <h1 class="text-4xl font-bold mb-8">Projects</h1>
         <div class="max-w-5xl mx-auto space-y-12">
       {sortedProjects.map(project => (
-        <a href={`/projects/${project.slug}`} class="group ">
+        <a href={`/projects/${project.id}`} class="group ">
           <div class="flex items-start justify-between mb-3">
       <div>
         <div class="flex items-center space-x-4">
