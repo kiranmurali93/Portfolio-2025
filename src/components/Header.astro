@@ -1,27 +1,134 @@
 ---
 const navItems = [
-  { title: "About Me", url: "/" },
+  { title: "About", url: "/" },
+  { title: "Experience", url: "/experience" },
   { title: "Projects", url: "/projects" },
-  { title: "Blogs", url: "https://blog.kiranpk.dev"}
-  // { title: "Initiatives", url: "/initiatives" },
 ];
+
+const currentPath = Astro.url.pathname;
+const isActive = (url: string) => (url === "/" ? currentPath === "/" : currentPath.startsWith(url));
 ---
 
-<header class="py-6">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6">
-    <nav>
-      <ul class="flex justify-center space-x-12">
-        {navItems.map(item => (
-          <li>
-            <a 
-              href={item.url} 
-              class="text-gray-600 hover:text-gray-900 transition-colors duration-300 text-lg"
-            >
-              {item.title}
-            </a>
-          </li>
-        ))}
-      </ul>
+<div class="sticky top-0 z-50">
+  <header
+    class="kpk-header flex items-center justify-between gap-3 mx-4 mt-4 px-6 py-3 rounded-full border flex-wrap"
+    style="background: var(--bg-translucent); backdrop-filter: blur(8px); border-color: var(--border); box-shadow: 0 8px 24px oklch(0 0 0 / 0.12);"
+  >
+    <a href="/" class="text-[17px] font-bold tracking-tight flex-shrink-0" style="color: var(--heading-strong);">
+      Kiran&nbsp;P&nbsp;K
+    </a>
+
+    <nav class="kpk-nav-full flex items-center gap-1.5 flex-nowrap justify-end">
+      {navItems.map(item => (
+        <a
+          href={item.url}
+          class="text-[15px] px-3.5 py-2 rounded-full transition-colors"
+          style={isActive(item.url)
+            ? "color: var(--accent); background: var(--accent-soft);"
+            : "color: var(--muted);"}
+        >
+          {item.title}
+        </a>
+      ))}
+      <a href="https://blog.kiranpk.dev" target="_blank" rel="noopener" class="text-[15px] px-3.5 py-2 rounded-full transition-colors" style="color: var(--muted);">Blogs</a>
+      <a href="/assets/Kiran_PK_Resume.pdf" download="Kiran_PK_Resume.pdf" class="text-[15px] px-3.5 py-2 rounded-full transition-colors" style="color: var(--muted);">Résumé</a>
+      <div class="flex items-center gap-3.5 flex-shrink-0 whitespace-nowrap ml-1">
+        <button
+          type="button"
+          data-copy-email="kiranmurali93@gmail.com"
+          class="text-sm font-medium px-4 py-2 rounded-full border bg-transparent cursor-pointer"
+          style="border-color: var(--border-strong); color: var(--heading-strong);"
+        >
+          Contact
+        </button>
+        <button
+          type="button"
+          id="theme-toggle"
+          aria-label="Toggle light/dark mode"
+          class="relative w-11 h-6 rounded-full border flex-shrink-0 bg-transparent cursor-pointer"
+          style="border-color: var(--border-strong);"
+        >
+          <span class="theme-toggle-knob absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full transition-all" style="background: var(--muted);"></span>
+        </button>
+      </div>
     </nav>
+
+    <button
+      type="button"
+      id="mobile-menu-toggle"
+      aria-label="Toggle menu"
+      class="kpk-hamburger hidden items-center justify-center w-7 h-7 flex-shrink-0 relative cursor-pointer"
+    >
+      <span class="hamburger-line block absolute w-5 h-0.5" style="background: var(--heading-strong);"></span>
+      <span class="hamburger-line-2 block absolute w-5 h-0.5" style="background: var(--heading-strong);"></span>
+    </button>
+  </header>
+
+  <div id="mobile-panel" class="hidden mx-4 mt-2 p-5 rounded-3xl border grid grid-cols-2 gap-x-6 gap-y-2" style="background: var(--bg-translucent); backdrop-filter: blur(8px); border-color: var(--border); box-shadow: 0 8px 24px oklch(0 0 0 / 0.12);">
+    {navItems.map(item => (
+      <a
+        href={item.url}
+        class="py-3 px-3 -mx-3 rounded-full text-base font-medium"
+        style={isActive(item.url)
+          ? "color: var(--accent); background: var(--accent-soft);"
+          : "color: var(--text);"}
+      >
+        {item.title}
+      </a>
+    ))}
+    <a href="https://blog.kiranpk.dev" target="_blank" rel="noopener" class="py-3 text-base" style="color: var(--text);">Blogs</a>
+    <a href="/assets/Kiran_PK_Resume.pdf" download="Kiran_PK_Resume.pdf" class="py-3 text-base" style="color: var(--text);">Résumé</a>
+    <button type="button" data-copy-email="kiranmurali93@gmail.com" class="py-3 text-base text-left bg-transparent border-0 cursor-pointer" style="color: var(--text);">Contact</button>
+    <button type="button" id="mobile-theme-toggle" class="flex items-center gap-2.5 py-3 text-base cursor-pointer bg-transparent border-0 text-left" style="color: var(--text);">
+      <span>Light / dark mode</span>
+      <span class="relative w-11 h-6 rounded-full border flex-shrink-0" style="border-color: var(--border-strong);">
+        <span class="theme-toggle-knob absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full transition-all" style="background: var(--muted);"></span>
+      </span>
+    </button>
   </div>
-</header>
+</div>
+
+<style>
+  @media (max-width: 800px) {
+    .kpk-header { padding: 14px 18px !important; gap: 10px !important; margin: 12px 12px 0 !important; }
+    .kpk-nav-full { display: none !important; }
+    .kpk-hamburger { display: flex !important; }
+  }
+  .theme-toggle-knob.is-light {
+    left: 22px;
+    background: var(--accent);
+  }
+  .hamburger-line { transition: transform 0.2s; }
+  #mobile-menu-toggle[aria-expanded="true"] .hamburger-line:first-child { transform: rotate(45deg); }
+  #mobile-menu-toggle[aria-expanded="true"] .hamburger-line-2 { transform: rotate(-45deg); }
+  #mobile-menu-toggle[aria-expanded="false"] .hamburger-line:first-child { transform: translateY(-4px); }
+  #mobile-menu-toggle[aria-expanded="false"] .hamburger-line-2 { transform: translateY(4px); }
+</style>
+
+<script is:inline data-astro-rerun>
+  (function () {
+    function syncKnob() {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      document.querySelectorAll('.theme-toggle-knob').forEach((el) => el.classList.toggle('is-light', isLight));
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncKnob();
+    }
+    syncKnob();
+    document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+    document.getElementById('mobile-theme-toggle')?.addEventListener('click', toggleTheme);
+
+    const menuToggle = document.getElementById('mobile-menu-toggle');
+    const panel = document.getElementById('mobile-panel');
+    menuToggle?.setAttribute('aria-expanded', 'false');
+    menuToggle?.addEventListener('click', function () {
+      const open = menuToggle.getAttribute('aria-expanded') === 'true';
+      menuToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+      panel?.classList.toggle('hidden', open);
+    });
+  })();
+</script>

@@ -9,7 +9,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "Kiran PK" } = Astro.props;
+const { title, description = "Kiran PK — Software Engineer" } = Astro.props;
 ---
 
 <!doctype html>
@@ -17,41 +17,107 @@ const { title, description = "Kiran PK" } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#2b3038" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <ClientRouter />
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem('theme');
+        const theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
   </head>
-  <body class="min-h-screen bg-white flex flex-col">
+  <body class="min-h-screen flex flex-col">
     <Header />
     <main class="flex-grow">
       <slot />
     </main>
     <Footer />
+
+    <div class="fixed inset-x-0 top-24 z-[100] flex justify-center pointer-events-none px-4">
+      <div
+        id="copy-toast"
+        role="status"
+        aria-live="polite"
+        class="kpk-toast px-5 py-3 rounded-full text-sm font-medium text-center opacity-0 transition-all duration-300 whitespace-nowrap"
+        style="background: var(--heading-strong); color: var(--bg); transform: translateY(-8px);"
+      ></div>
+    </div>
+
+    <style>
+      @media (max-width: 640px) {
+        .kpk-toast {
+          white-space: normal;
+          max-width: 100%;
+        }
+      }
+    </style>
+
+    <script is:inline data-astro-rerun>
+      (function () {
+        let toastTimeout;
+
+        function showToast(message) {
+          const toast = document.getElementById('copy-toast');
+          if (!toast) return;
+          toast.textContent = message;
+          toast.style.opacity = '1';
+          toast.style.transform = 'translateY(0)';
+          clearTimeout(toastTimeout);
+          toastTimeout = setTimeout(function () {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-8px)';
+          }, 2500);
+        }
+
+        function copyText(text) {
+          if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+          }
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+          } finally {
+            document.body.removeChild(textarea);
+          }
+          return Promise.resolve();
+        }
+
+        document.addEventListener('click', function (event) {
+          const trigger = event.target.closest('[data-copy-email]');
+          if (!trigger) return;
+          event.preventDefault();
+          const email = trigger.getAttribute('data-copy-email');
+
+          const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+          const mobilePanel = document.getElementById('mobile-panel');
+          if (mobileMenuToggle && mobilePanel) {
+            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            mobilePanel.classList.add('hidden');
+          }
+
+          copyText(email).then(function () {
+            showToast('Email copied — reach out at ' + email);
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
-
-<style is:global>
-  :root {
-    --font-sans: 'Inter', system-ui, sans-serif;
-  }
-
-  html {
-    font-family: var(--font-sans);
-    scroll-behavior: smooth;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    color: #111827;
-    line-height: 1.5;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    line-height: 1.2;
-  }
-</style>

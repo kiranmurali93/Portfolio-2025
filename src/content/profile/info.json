@@ -1,6 +1,11 @@
 {
-  "name": "Kiran PK",
-  "tagline": "Not just building projects - building perspective.",
+  "name": "Kiran P K",
+  "tagline": "Software Engineer",
   "profileImage": "/profileImg.jpg",
-  "aboutBrief": "I’m a software engineer who thrives on building things that solve real-world problems — from side projects and open-source tools to scalable backend systems. \n I enjoy digging deep into systems, databases, and protocols, and I often find myself obsessing over clean architecture and developer experience. Whether it's a quirky browser extension or a fintech tool, I try to ship with clarity and purpose. \n My interests revolve around distributed systems, performance optimization, and learning by doing. I document my learnings through blogs that reflect both wins and war stories — the things that don’t usually make it to the README."
+  "aboutBrief": "Backend-focused software engineer building and owning production systems across fintech and SaaS — shipping features, reducing tech debt, and building the infrastructure growing teams need.",
+  "paragraphs": [
+    "At every company I've joined, I've taken ownership beyond my role. At GeoServes I inherited an acquired platform with no tests and no clear architecture — rebuilt it end-to-end in six months, introduced unit testing standards with Jest and dependency injection, and now own backend delivery and production monitoring across two products.",
+    "At Dexif I owned the entire Postgres layer across four fintech products — schema design, migrations, Row-Level Security policies, RPC functions — while shipping features against stock exchange integration deadlines. At SuperHire I grew from intern to SDE-L2, led a team of five, built CI/CD pipelines that cut deploy time by 50% and increased release frequency by 75%, and set up observability with Grafana and Prometheus.",
+    "My stack is Node.js, TypeScript, Postgres, and AWS, with production Golang experience. I'm most useful in teams that are past the prototype stage and need engineers who can own a domain, improve what exists, and ship reliably."
+  ]
 }

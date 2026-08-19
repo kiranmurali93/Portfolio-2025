@@ -1,0 +1,60 @@
+---
+import { getEntry } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+
+const exp = await getEntry('experience', 'experience');
+const { roles, earlierRoles, education } = exp.data;
+---
+
+<Layout title="Experience | Kiran PK">
+  <section class="kpk-section max-w-[760px] mx-auto px-8" style="padding-top: 64px; padding-bottom: 72px;">
+    <h1 class="kpk-h1 font-bold mb-12" style="font-size: 38px; color: var(--heading);">Experience</h1>
+
+    <div class="flex flex-col" style="gap: 26px;">
+      {roles.map((role) => (
+        <div class="kpk-exp-row grid gap-6" style="grid-template-columns: 150px 1fr;">
+          <div class="text-sm pt-[3px]" style="color: var(--muted-dim);">
+            {role.dates}
+            {role.current && (
+              <div class="mt-2 inline-flex items-center gap-1.5 text-xs" style="color: var(--accent);">
+                <span class="w-1.5 h-1.5 rounded-full inline-block" style="background: var(--accent);"></span>
+                Current
+              </div>
+            )}
+          </div>
+          <div class="border-l pl-6" style="border-color: var(--border);">
+            <h3 class="text-[19px] font-semibold mb-0.5" style="color: var(--heading-strong);">{role.role}</h3>
+            <p class="text-[15px] mb-3.5" style="color: var(--accent);">{role.company} · {role.location}</p>
+            <ul class="m-0 pl-[18px] flex flex-col gap-2 text-[15.5px]" style="color: var(--text-secondary);">
+              {role.bullets.map((bullet) => <li>{bullet}</li>)}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <h2 class="font-bold mb-5" style="margin-top: 64px; font-size: 22px; color: var(--heading-strong);">Earlier</h2>
+    <div class="flex flex-col gap-3.5">
+      {earlierRoles.map((role) => (
+        <div class="flex justify-between gap-4 flex-wrap text-[15px]" style="color: var(--text-secondary);">
+          <span><strong class="font-medium" style="color: var(--heading-strong);">{role.role}</strong> · {role.company}</span>
+          <span style="color: var(--muted-dim);">{role.dates}</span>
+        </div>
+      ))}
+    </div>
+
+    <div class="pt-6 border-t" style="margin-top: 64px; border-color: var(--border);">
+      <h2 class="font-bold mb-2" style="font-size: 22px; color: var(--heading-strong);">Education</h2>
+      <p class="text-[15.5px] m-0" style="color: var(--text-secondary);">{education.degree} — {education.school} ({education.dates})</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  @media (max-width: 640px) {
+    .kpk-exp-row { grid-template-columns: 1fr !important; gap: 8px !important; }
+    .kpk-exp-row > div:first-child { padding-top: 0 !important; }
+    .kpk-section { padding: 64px 20px 80px !important; }
+    .kpk-h1 { font-size: 34px !important; }
+  }
+</style>

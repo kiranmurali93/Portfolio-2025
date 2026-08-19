@@ -1,8 +1,45 @@
 ---
+import { getEntry } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import Hero from '../components/Hero.astro';
+
+const profile = await getEntry('profile', 'info');
+const { data } = profile;
 ---
 
-<Layout title="About | Kiran PK">
-  <Hero />
+<Layout title="Kiran PK — Software Engineer">
+  <section class="kpk-section max-w-[760px] mx-auto px-8" style="padding-top: 64px; padding-bottom: 72px;">
+    <p class="text-[15px] tracking-wide uppercase mb-3" style="color: var(--accent);">{data.tagline}</p>
+    <h1 class="kpk-h1 font-bold mb-5" style="font-size: 48px; line-height: 1.15; color: var(--heading);">
+      I take ownership of systems and make them scale.
+    </h1>
+    <p class="text-xl mb-10 max-w-[600px]" style="color: var(--text-secondary);">{data.aboutBrief}</p>
+
+    <div class="kpk-hero flex flex-wrap items-start gap-6 mb-8">
+      <div class="flex-1 min-w-[280px] flex flex-col gap-[18px] text-[16.5px]" style="color: var(--text-secondary);">
+        {data.paragraphs.map((p) => <p class="m-0">{p}</p>)}
+      </div>
+      <img
+        src={data.profileImage}
+        alt={`Photo of ${data.name}`}
+        width="200"
+        height="240"
+        class="flex-shrink-0 rounded-md object-cover w-[200px] h-[240px]"
+      />
+    </div>
+
+    <div class="mt-2 px-5 py-4 rounded-lg border text-[15.5px]" style="border-color: var(--border); color: var(--text-secondary);">
+      <span class="inline-block w-2 h-2 rounded-full mr-2 align-middle" style="background: oklch(0.72 0.19 145);"></span>
+      Currently looking for full-time engineering roles at product companies scaling their teams.
+      <br />Say hello at <button type="button" data-copy-email="kiranmurali93@gmail.com" class="font-medium bg-transparent border-0 p-0 cursor-pointer" style="color: var(--accent); font-size: inherit; font-family: inherit;">kiranmurali93@gmail.com</button>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  @media (max-width: 640px) {
+    .kpk-hero { flex-direction: column-reverse !important; }
+    .kpk-hero > img { width: 180px !important; height: 216px !important; align-self: center; margin: 0 auto; }
+    .kpk-section { padding: 64px 20px 80px !important; }
+    .kpk-h1 { font-size: 34px !important; }
+  }
+</style>

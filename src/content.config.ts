@@ -12,6 +12,11 @@ const projects = defineCollection({
     demo: z.string().optional(),
     year: z.number(),
     featured: z.boolean().optional(),
+    tech: z.array(z.string()).default([]),
+    overview: z.string().optional(),
+    inspiration: z.string().optional(),
+    features: z.array(z.string()).default([]),
+    architecture: z.string().optional(),
   }),
 });
 
@@ -22,7 +27,32 @@ const profile = defineCollection({
     tagline: z.string(),
     profileImage: z.string(),
     aboutBrief: z.string(),
+    paragraphs: z.array(z.string()).default([]),
   }),
 });
 
-export const collections = { projects, profile };
+const experience = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/experience' }),
+  schema: z.object({
+    roles: z.array(z.object({
+      role: z.string(),
+      company: z.string(),
+      location: z.string(),
+      dates: z.string(),
+      current: z.boolean().default(false),
+      bullets: z.array(z.string()),
+    })),
+    earlierRoles: z.array(z.object({
+      role: z.string(),
+      company: z.string(),
+      dates: z.string(),
+    })),
+    education: z.object({
+      degree: z.string(),
+      school: z.string(),
+      dates: z.string(),
+    }),
+  }),
+});
+
+export const collections = { projects, profile, experience };

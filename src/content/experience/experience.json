@@ -1,0 +1,67 @@
+{
+  "roles": [
+    {
+      "role": "SDE 2",
+      "company": "GeoServes",
+      "location": "Bengaluru",
+      "dates": "Jun 2025 – Present",
+      "current": true,
+      "bullets": [
+        "Led an end-to-end rebuild of an acquired laytime-claims platform, delivering it to production in 6 months with full ownership of architecture and release lifecycle.",
+        "Own backend delivery and production monitoring for a Voyage Optimization platform spanning route generation, PDF generation, and a DB sync cron service.",
+        "Introduced unit testing from scratch using Jest and dependency injection patterns across services.",
+        "Mentored interns and SDE-1 engineers, establishing reusable service patterns and testing standards."
+      ]
+    },
+    {
+      "role": "Full Stack Engineer",
+      "company": "Dexif",
+      "location": "Noida",
+      "dates": "Feb 2024 – Jun 2025",
+      "current": false,
+      "bullets": [
+        "Built an internal financial platform in under a month enabling transaction visibility — it contributed to the company's seed round.",
+        "Owned PostgreSQL database design, schema migrations, and implemented complex Row-Level Security (RLS) policies and RPC functions across four products.",
+        "Shipped a BSE-integrated Bonds platform, an FD platform, and an Unlisted Stocks marketplace.",
+        "Designed FD platform with WebView APIs, SSO authentication, and payouts management for seamless partner integrations.",
+        "Integrated third-party services (Digio for KYC, bank verification) to streamline onboarding and compliance."
+      ]
+    },
+    {
+      "role": "SDE – L2",
+      "company": "SuperHire",
+      "location": "Kochi",
+      "dates": "Mar 2023 – Jan 2024",
+      "current": false,
+      "bullets": [
+        "Led a team of 5 engineers to design and deliver scalable backend systems across monolithic and microservices architectures.",
+        "Reduced deployment time by 50% and increased release frequency by 75% by building CI/CD pipelines using Docker, AWS ECS, and ECR.",
+        "Designed and implemented event-driven workflows using AWS Lambda, EventBridge, S3, and RabbitMQ.",
+        "Established observability using Grafana and Prometheus, improving production debugging and system visibility."
+      ]
+    },
+    {
+      "role": "SDE – L1",
+      "company": "SuperHire",
+      "location": "Kochi",
+      "dates": "Jun 2022 – Feb 2023",
+      "current": false,
+      "bullets": [
+        "Migrated frontend architecture from React to Vue with Vite, improving performance and developer experience.",
+        "Built CI/CD pipelines and automated deployment workflows using AWS (Beanstalk, S3, CloudFront) and Bitbucket CI/CD.",
+        "Improved system reliability and code quality by implementing integration and unit testing practices."
+      ]
+    }
+  ],
+  "earlierRoles": [
+    { "role": "Engineering Intern", "company": "SuperHire", "dates": "Sep 2021 – May 2022" },
+    { "role": "React JS Intern", "company": "MerryBunch", "dates": "May – Aug 2021" },
+    { "role": "Tech Lead", "company": "TEDxCUSAT", "dates": "Aug 2020 – Mar 2021" },
+    { "role": "Community Manager Intern", "company": "TinkerHub", "dates": "2019 – Jan 2020" }
+  ],
+  "education": {
+    "degree": "BTech, Computer Science",
+    "school": "Cochin University of Science and Technology",
+    "dates": "2018–2022"
+  }
+}
