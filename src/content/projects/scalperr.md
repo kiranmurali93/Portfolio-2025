@@ -4,7 +4,7 @@ description: "Backend for a real-time options trading platform — multi-broker 
 image: ""
 bannerImage: ""
 github: ""
-demo: "https://scalperr.in/"
+demo: ""
 year: 2024
 featured: true
 tech: ["Golang", "Postgres", "Redis", "WebSocket"]
