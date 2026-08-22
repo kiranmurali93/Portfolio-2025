@@ -3,7 +3,11 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 
 const projects = await getCollection('projects');
-const sortedProjects = projects.sort((a, b) => (b.data.year ?? 0) - (a.data.year ?? 0));
+const sortedProjects = projects.sort((a, b) => {
+  const yearDiff = (b.data.year ?? 0) - (a.data.year ?? 0);
+  if (yearDiff !== 0) return yearDiff;
+  return (a.data.order ?? 0) - (b.data.order ?? 0);
+});
 ---
 
 <Layout title="Projects | Kiran PK">

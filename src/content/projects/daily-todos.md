@@ -6,6 +6,7 @@ bannerImage: ""
 github: "https://github.com/kiranmurali93/daily-todos-obsidian-plugin"
 demo: ""
 year: 2026
+order: 3
 featured: true
 tech: ["JavaScript", "Obsidian API"]
 overview: "Built to replace a manual daily-note routine in Obsidian — one click opens or creates today's todo note, with quick navigation to any date and a calendar view to see which days have notes."

@@ -6,6 +6,7 @@ bannerImage: ""
 github: "https://github.com/kiranmurali93/momentum-backtest"
 demo: ""
 year: 2026
+order: 1
 featured: true
 tech: ["Python", "Pandas", "NumPy", "Node.js", "Jupyter"]
 overview: "Built to validate a Nifty/Gold/Liquid-fund momentum strategy against real market data before allocating capital to it. The backtest survived multiple rounds of self-correction — a lookback parameter that looked optimal turned out to be regime-specific noise, a stock-picking overlay looked free until corrected for survivorship bias, and two real data bugs were found and fixed along the way. Findings are logged chronologically, including what didn't hold up."

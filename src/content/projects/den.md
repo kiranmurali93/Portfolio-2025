@@ -6,6 +6,7 @@ bannerImage: ""
 github: "https://github.com/kiranmurali93/den"
 demo: ""
 year: 2026
+order: 2
 featured: true
 tech: ["Make", "Bash", "Shell"]
 overview: "Built to stop re-doing the same setup steps every time I get a new machine — one `make install` handles system packages, dev tools, dotfiles, and syncing an Obsidian vault via Syncthing."
