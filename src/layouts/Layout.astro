@@ -27,6 +27,9 @@ const {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const absoluteOgImage = new URL(ogImage, Astro.site);
 
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+const clarityProjectId = import.meta.env.PUBLIC_CLARITY_PROJECT_ID;
+
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -88,6 +91,31 @@ const websiteJsonLd = {
     <script is:inline type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
     <slot name="head" />
+
+    {import.meta.env.PROD && gaMeasurementId && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+        <script is:inline define:vars={{ gaMeasurementId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', gaMeasurementId);
+        </script>
+      </>
+    )}
+
+    {import.meta.env.PROD && clarityProjectId && (
+      <script is:inline define:vars={{ clarityProjectId }}>
+        (function (c, l, a, r, i, t, y) {
+          c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+          t = l.createElement(r);
+          t.async = 1;
+          t.src = "https://www.clarity.ms/tag/" + i;
+          y = l.getElementsByTagName(r)[0];
+          y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", clarityProjectId);
+      </script>
+    )}
 
     <ClientRouter />
     <script is:inline>
