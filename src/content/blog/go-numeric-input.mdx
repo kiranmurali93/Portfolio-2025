@@ -1,0 +1,76 @@
+---
+title: "Handling Numeric Input in Go: Base Interpretation Mistakes to Avoid"
+pubDate: 2024-11-11
+readTime: "3 min read"
+tags: ["Golang", "Debugging"]
+summary: "A leading zero quietly turned my input into octal. What Go's numeric literals actually do, and how to read integers the way you meant to."
+canonical: "https://blog.kiranpk.dev/a-guide-to-handling-numeric-input-in-go-base-interpretation-mistakes-to-avoid"
+---
+
+## The problem: unexpected behaviour with leading zeros
+
+While working on a Go program that reverses an integer input, I hit an unexpected issue: values with leading zeros produced incorrect results. Entering `0123` returned `83` instead of `321`. After some debugging, I realised the cause was rooted in Go's interpretation of numeric literals.
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var inp int
+    fmt.Scan(&inp)
+    fmt.Println(inp) // Outputs unexpected values for leading-zero inputs
+}
+```
+
+Why would Go interpret `0123` as `83`? Let's look at the mechanics behind Go's input handling.
+
+## Numeric literals in Go
+
+In Go, numeric literals are interpreted based on their prefixes:
+
+- **Decimal** — no prefix (e.g. `123`).
+- **Octal** — numbers starting with `0`, like `0123`, are base 8.
+- **Hexadecimal** — prefixed with `0x` or `0X`, like `0x1F`.
+- **Binary** — prefixed with `0b` or `0B`, like `0b1010`. Introduced in Go 1.13.
+
+Because `0123` has a `0` prefix, Go treats it as octal, converting it to `83` in decimal — which explains the unexpected output.
+
+## The fix: parse explicitly
+
+If you're dealing with user input that might include leading zeros and you want decimal interpretation, read the input as a string and convert it explicitly:
+
+```go
+package main
+
+import (
+    "fmt"
+    "strconv"
+)
+
+func main() {
+    var inp string
+    fmt.Scan(&inp)
+
+    num, err := strconv.Atoi(inp)
+    if err != nil {
+        fmt.Println("Invalid input")
+        return
+    }
+
+    fmt.Println(num) // Decimal, regardless of leading zeros
+}
+```
+
+## Other situations to watch for
+
+- **`strconv.ParseInt` with base 0** — `strconv.ParseInt("0123", 0, 64)` detects the base from the prefix. If you need consistent decimal interpretation, pass `10` instead.
+- **Hex and binary literals in code** — useful, but make sure they aren't used inadvertently: `0x` and `0b` prefixes trigger hexadecimal and binary parsing.
+
+## Key takeaways
+
+1. **Read input as strings** when the data could carry ambiguous prefixes, and specify the base during conversion.
+2. **Explicitly specify the base** when parsing with `strconv` to avoid automatic base detection.
+3. **Watch out for leading zeros** in integer input, where the base might unintentionally switch to octal.
+
+Understanding these nuances prevents bugs and keeps numeric input predictable.

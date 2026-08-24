@@ -1,0 +1,133 @@
+---
+title: "Implementing a Simple Cache Invalidation System in Vue.js"
+pubDate: 2023-09-19
+readTime: "4 min read"
+tags: ["Vue.js", "Frontend", "Performance"]
+summary: "Caching is the easy half. A pragmatic way to know when cached content on the client has gone stale — and refresh it automatically after a release."
+canonical: "https://blog.kiranpk.dev/simple-cache-invalidation-system-in-vuejs"
+---
+
+Before we delve into the mechanics of cache invalidation, let's clarify what caching is.
+
+A cache, often referred to as a web cache, is a technology designed to store copies of web content — pages, images, and other resources — closer to end users. The goal is to improve the speed and efficiency of page loading by reducing the time it takes to fetch content from remote servers, which minimises latency and conserves bandwidth.
+
+Given that, caching clearly leads to better performance. So when should we invalidate these caches? It varies by use case. In my experience the challenge emerged during major releases: some users hit issues with the platform even after thorough testing, and at times we had to ask them to force-refresh their browsers to get up-to-date data. Clearly not an ideal experience, which prompted us to find a solution.
+
+Our approach was straightforward: automate refreshing the client-side cache whenever a new release goes out. We explored several methods, and the one that proved effective was maintaining a version comparison between the local version and the deployed version.
+
+## Step 1: create a version.json file
+
+Create a `version.json` file in your Vue project's public folder, with a key named version whose value can be compared. Here we use a timestamp.
+
+```json
+{
+  "version": "" // This is where the timestamp comes in
+}
+```
+
+## Step 2: implement the version comparison in a composable
+
+Start by defining the base URL for your domain:
+
+```typescript
+const baseUrl = import.meta.env.VITE_WEB_URL;
+```
+
+This should point to your website's domain. Next, retrieve the deployed version from the hosted domain:
+
+```typescript
+interface GetVersion {
+  version: string;
+}
+
+async function getRealVersion(): Promise<GetVersion> {
+  const res = await axios.get<GetVersion>(`${baseUrl}/version.json`);
+  return res.data;
+}
+```
+
+Similarly, obtain the local version from the `version.json` file:
+
+```typescript
+import localVersion from "../../public/version.json";
+
+function getLocalVersion(): GetVersion {
+  try {
+    const version = JSON.parse(JSON.stringify(localVersion));
+    return version;
+  } catch {
+    return {
+      version: "",
+    };
+  }
+}
+```
+
+Now that we have both versions, we can compare them:
+
+```typescript
+import { compareAsc, isValid } from "date-fns";
+
+export async function invalidCacheCheck(): Promise<Boolean> {
+  const deployedVersion = new Date((await getRealVersion()).version);
+  const localVersion = new Date(getLocalVersion().version);
+
+  if (!isValid(localVersion)) {
+    return false;
+  }
+
+  const newVersionAvailable = compareAsc(deployedVersion, localVersion);
+
+  if (newVersionAvailable === 1) return true;
+
+  return false;
+}
+```
+
+## Step 3: run the check on a timer
+
+The problem with the function above is that it only checks once when called. To address that, we perform checks at regular intervals:
+
+```typescript
+import { minutesToMilliseconds } from "date-fns";
+
+export async function cacheInvalidator(): Promise<void> {
+  const timeIntervalInMinutes = 5;
+  const timeIntervalInMillisecond = minutesToMilliseconds(
+    timeIntervalInMinutes
+  );
+
+  setInterval(async () => {
+    const invalidate = await invalidCacheCheck();
+    if (invalidate) {
+      window.location.reload();
+    }
+  }, timeIntervalInMillisecond);
+}
+```
+
+This checks whether a new version is available every five minutes and, if so, refreshes the client-side cache.
+
+## Step 4: wire it up in App.vue
+
+To activate the mechanism, call the `cacheInvalidator()` function in your `App.vue` file.
+
+## Step 5: update the version on each deployment
+
+Finally, make sure the version is updated with every deployment by generating `version.json` in your build:
+
+```bash
+#!/bin/bash
+
+# Get the current UTC time
+current_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Create a JSON object with the current time
+json_data="{ \"version\": \"$current_time\" }"
+
+echo "$json_data" > ./public/version.json
+
+echo "Version has been updated"
+```
+
+With this in place, your Vue.js application always serves the latest content to users — no manual refreshes needed.

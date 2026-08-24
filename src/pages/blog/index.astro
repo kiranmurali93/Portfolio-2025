@@ -1,0 +1,192 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+const posts = await getCollection('blog');
+const sortedPosts = posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+const topics = ['All', ...sortedPosts.reduce((acc: string[], p) => {
+  p.data.tags.forEach((t) => { if (!acc.includes(t)) acc.push(t); });
+  return acc;
+}, [])];
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+const blogJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  name: "Kiran PK — Writing",
+  url: new URL("/blog", Astro.site).toString(),
+  blogPost: sortedPosts.map((post) => ({
+    "@type": "BlogPosting",
+    headline: post.data.title,
+    url: new URL(`/blog/${post.id}`, Astro.site).toString(),
+    datePublished: post.data.pubDate.toISOString(),
+    description: post.data.summary,
+  })),
+};
+---
+
+<Layout title="Writing | Kiran PK" description="Notes from production — concurrency, databases, testing, and the bugs that taught me something.">
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(blogJsonLd)} />
+  </Fragment>
+  <section class="kpk-section max-w-[760px] mx-auto px-8" style="padding-top: 64px; padding-bottom: 72px;">
+    <h1 class="kpk-h1 font-bold mb-3.5" style="font-size: 38px; color: var(--heading);">Writing</h1>
+    <p class="text-[17px] mb-8 max-w-[600px]" style="color: var(--text-secondary);">
+      Notes from production — concurrency, databases, testing, and the bugs that taught me something.
+    </p>
+
+    <div class="flex gap-2 flex-wrap mb-2" id="topic-pills">
+      {topics.map((topic) => (
+        <button
+          type="button"
+          data-topic={topic}
+          class="kpk-topic-pill text-[13.5px] px-3.5 py-1.5 rounded-full border cursor-pointer bg-transparent"
+          style="color: var(--muted); border-color: var(--border);"
+          aria-pressed={topic === 'All'}
+        >
+          {topic}
+        </button>
+      ))}
+    </div>
+
+    <div class="mb-9">
+      <button
+        type="button"
+        id="topics-toggle"
+        class="text-[13.5px] cursor-pointer bg-transparent border-0 p-0 hidden"
+        style="color: var(--accent);"
+      >
+        Show more
+      </button>
+    </div>
+
+    <div class="flex flex-col" id="post-list">
+      {sortedPosts.map((post, i) => (
+        <a
+          href={`/blog/${post.id}`}
+          class="kpk-post-card block border-t"
+          style="cursor:pointer; padding: 26px 0; border-color: var(--border); color: inherit;"
+          data-tags={post.data.tags.join(',')}
+        >
+          <div class="flex items-center gap-2.5 mb-2 text-[13px]" style="color: var(--muted-dim);">
+            <span>{dateFormatter.format(post.data.pubDate)}</span>
+            <span>·</span>
+            <span>{post.data.readTime}</span>
+            {i === 0 && (
+              <span class="kpk-latest-badge text-[11.5px] tracking-wide uppercase border rounded px-1.5 py-0.5" style="color: var(--accent); border-color: var(--accent);">Latest</span>
+            )}
+          </div>
+          <h3 class="text-[22px] font-semibold mb-2 leading-tight" style="color: var(--heading-strong); text-wrap: pretty;">{post.data.title}</h3>
+          <p class="text-base mb-3.5 max-w-[620px]" style="color: var(--text-secondary); text-wrap: pretty;">{post.data.summary}</p>
+          <div class="flex gap-2 flex-wrap items-center">
+            {post.data.tags.map((t) => (
+              <span class="text-xs px-2.5 py-1 rounded border" style="border-color: var(--border-strong); color: var(--muted);">{t}</span>
+            ))}
+            <span class="text-[14.5px] ml-1" style="color: var(--accent);">Read →</span>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <div class="pt-6 border-t text-[15px]" style="margin-top: 48px; border-color: var(--border); color: var(--muted);">
+      <span id="post-count">{sortedPosts.length} posts and counting.</span>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .kpk-topic-pill[aria-pressed="true"] {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+  }
+  .kpk-post-card.is-hidden {
+    display: none;
+  }
+  #topic-pills {
+    overflow: hidden;
+  }
+  .kpk-latest-badge {
+    display: none;
+  }
+  .kpk-post-card:not(.is-hidden):first-of-type .kpk-latest-badge {
+    display: inline-block;
+  }
+
+  @media (max-width: 640px) {
+    .kpk-section { padding: 64px 20px 80px !important; }
+    .kpk-h1 { font-size: 34px !important; }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  (function () {
+    const ROWS_LIMIT = 2;
+    const pillsContainer = document.getElementById('topic-pills');
+    const pills = Array.from(document.querySelectorAll('.kpk-topic-pill'));
+    const cards = document.querySelectorAll('.kpk-post-card');
+    const countEl = document.getElementById('post-count');
+    const topicsToggle = document.getElementById('topics-toggle');
+    const postWord = (n) => (n === 1 ? 'post' : 'posts');
+
+    let currentTopic = 'All';
+    let topicsExpanded = false;
+
+    function applyFilter(topic) {
+      let visible = 0;
+      cards.forEach((card) => {
+        const tags = (card.getAttribute('data-tags') || '').split(',');
+        const show = topic === 'All' || tags.includes(topic);
+        card.classList.toggle('is-hidden', !show);
+        if (show) visible += 1;
+      });
+      if (countEl) countEl.textContent = visible + ' ' + postWord(visible) + (topic === 'All' ? ' and counting.' : ' in ' + topic + '.');
+    }
+
+    function layoutTopics() {
+      if (!pillsContainer || !topicsToggle || pills.length === 0) return;
+
+      pillsContainer.style.maxHeight = 'none';
+      const containerTop = pillsContainer.getBoundingClientRect().top;
+      const rowTops = [...new Set(pills.map((p) => Math.round(p.getBoundingClientRect().top - containerTop)))].sort((a, b) => a - b);
+
+      if (rowTops.length <= ROWS_LIMIT) {
+        topicsToggle.classList.add('hidden');
+        pillsContainer.style.maxHeight = 'none';
+        return;
+      }
+
+      topicsToggle.classList.remove('hidden');
+      if (topicsExpanded) {
+        pillsContainer.style.maxHeight = 'none';
+        topicsToggle.textContent = 'Show less';
+      } else {
+        pillsContainer.style.maxHeight = rowTops[ROWS_LIMIT] + 'px';
+        topicsToggle.textContent = 'Show more';
+      }
+    }
+
+    pills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        pills.forEach((p) => p.setAttribute('aria-pressed', String(p === pill)));
+        currentTopic = pill.getAttribute('data-topic');
+        applyFilter(currentTopic);
+      });
+    });
+
+    topicsToggle?.addEventListener('click', () => {
+      topicsExpanded = !topicsExpanded;
+      layoutTopics();
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(layoutTopics, 150);
+    });
+
+    applyFilter(currentTopic);
+    layoutTopics();
+  })();
+</script>

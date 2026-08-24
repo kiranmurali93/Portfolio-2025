@@ -1,0 +1,212 @@
+---
+title: "I Backtested Dual Momentum on Indian Markets Over 19 Years — Here's What Actually Worked"
+pubDate: 2026-08-22
+readTime: "14 min read"
+tags: ["Quantitative Investing", "Backtesting", "Nifty 50"]
+summary: "19 years of data, 8 rounds of testing, and two silent data bugs that would've fooled anyone — building and correcting a dual-momentum strategy for Nifty, Gold, and cash."
+---
+
+I wanted a simple, rules-based investing system for Indian markets that I could actually stick with. Not a screener I'd second-guess every month. Not a newsletter someone else writes. A strategy I understood from the ground up because I'd tested every assumption myself.
+
+Dual momentum — the idea that you rotate between assets based on their trailing returns, and step aside into cash when nothing has momentum — has solid academic backing globally. Gary Antonacci's work popularized it for US markets. But almost nothing I found rigorously tested it on Indian data, with Indian assets, Indian tax rules, and Indian market quirks like the NSE's data API throttling or Gold BeES having a 1:100 unit split that silently corrupts your return series if you don't catch it.
+
+So I built a full backtest from scratch, ran it over 19 years of data (2007–2026), broke my own conclusions several times over eight rounds of testing, and eventually deployed a live monthly signal generator that tells me what to hold each month. The whole thing is [open source on GitHub](https://github.com/kiranmurali93/momentum-backtest).
+
+This post is an honest account of that process — including the parts where I was wrong.
+
+---
+
+## The Strategy in 60 Seconds
+
+At the end of each month, the system does three things.
+
+First, it computes the trailing return over a fixed lookback window (I landed on 9 months — more on why later) for three assets: Nifty 50 (or Nifty Next 50), Gold (via Gold BeES NAV), and a Liquid Fund (Nippon India Liquid Fund).
+
+Second, it applies a **crash filter**: if Nifty's trailing return is at or below the Liquid Fund's trailing return, the system parks everything in the Liquid Fund. The idea is that if equity can't even beat the risk-free rate over the trailing window, it's signaling a sustained downturn.
+
+Third, if the crash filter doesn't trigger, it holds whichever of Nifty or Gold has the higher trailing return — classic relative momentum.
+
+The signal is computed at month-end, applied the next month (no lookahead bias). Costs are modeled at 0.13% round-trip per switch. Tax is modeled at 20% short-term capital gains on the switch month's return when the exited position was held under 12 months.
+
+> **What this is not:** This is not a day-trading or stock-picking system (though I tested a stock-picking overlay too — it's covered later). At its core it's a monthly asset-allocation signal: am I in equities, gold, or cash this month?
+
+---
+
+## Getting the Data Right (Harder Than It Sounds)
+
+Before a single backtest ran, I spent a surprising amount of time just getting clean data. Two bugs in my own data pipeline silently corrupted early results and had to be found and fixed before I trusted anything.
+
+### The Gold BeES split trap
+
+Gold BeES had a 1:100 unit split in December 2019. If you don't back-adjust for this, your return series shows a fake -99% single-day drop. It's the kind of thing that's obvious if you plot the data, but easy to miss if you're just computing trailing returns programmatically.
+
+### The missing scheme code
+
+Gold BeES has been renamed three times (Benchmark → Goldman Sachs → Nippon India), and each rename comes with a new AMFI scheme code. My initial data fetch was missing the original 2007–2011 "Benchmark Gold BeES" code entirely, which meant my "long history" backtest silently started in 2012 instead of 2007 — it never actually saw the 2008 Global Financial Crisis. Every conclusion I drew about strategy behavior during crashes was compromised until I found and fixed this.
+
+### The debt fund rebasing
+
+The Liquid Fund had a ~100x face-value rebasing in August 2012. Same class of problem as the Gold BeES split: if you don't back-adjust it, your return series is garbage. I caught this one because I'd already been burned by Gold BeES.
+
+### What I used
+
+| Asset | Source | Notes |
+|---|---|---|
+| Nifty 50/100/200/500 | NSE (nseindia.com) | Price index, not TRI — understates equity by ~1–1.5%/yr |
+| Gold | AMFI (mfapi.in) | Gold BeES NAV, stitched across 3 scheme codes, split-adjusted |
+| Liquid Fund | AMFI (mfapi.in) | Nippon India Liquid Fund, rebase-adjusted |
+| Stocks | Yahoo Finance | Daily adjusted close for ~100 Nifty constituents |
+| Index membership | niftyhistory.in | Inclusion/exclusion event log, reconstructed manually |
+
+Two test windows: a "short" window (2016–2026, ~10 years) and a "long" window (2007–2026, ~19 years) bounded by Gold BeES's true inception. The long window is what matters — and extending to it is what broke most of my early conclusions.
+
+---
+
+## First Results — And Why They Were Misleading
+
+My initial backtest used the 10-year window (2016–2026) with a 12-month lookback. The results looked great: the dual-momentum strategy cut maximum drawdown roughly in half compared to Nifty buy-and-hold (about -11% vs. -29%), with broadly competitive returns.
+
+I then tested lookback sensitivity (1, 2, 3, 6, and 12 months) and found that 3 months looked best — highest CAGR *and* highest Sharpe ratio among all variants. I also tested broader indices and found a seemingly clean pattern: Nifty 500 beat Nifty 200 beat Nifty 100 beat Nifty 50.
+
+> **Both of these conclusions were wrong.** The 3-month "win" was describing the specific character of the 2016–2026 rally, not a durable edge. The monotonic improvement with broader indices also didn't survive out-of-sample. I only discovered this when I extended the test window back to 2007.
+
+This is the most important meta-lesson of the entire project: **a 10-year backtest window on a single market regime will tell you confident lies.**
+
+---
+
+## The 19-Year Reality Check
+
+Extending the test window to 2007 brought in the 2008 Global Financial Crisis, the 2013 gold crash and taper tantrum, and the 2018 NBFC crisis — regime types that the original 10-year window simply didn't contain. I split the full window into Era A (pre-2016) and Era B (2016–2026) and re-tested everything.
+
+The 3-month lookback that had looked best? It was *negative Sharpe* in Era A across all four index widths. It won Era B convincingly and lost Era A completely. Classic regime fragility — a parameter that looks optimal because it happens to fit the most recent decade perfectly.
+
+The "broader index wins" monotonicity also broke down. With Era A correctly covering 2008–2016 (after fixing the missing Gold BeES scheme code), the ordering from Nifty 50 to Nifty 500 was not cleanly monotonic in either era.
+
+This round also revealed something I hadn't expected about my debt proxy. I'd been using an income fund (Aditya Birla Sun Life Income Fund) for the cash-parking leg — a medium-duration, actively managed fund that takes real credit risk. When I swapped it for a proper liquid fund (Nippon India Liquid Fund, with near-zero duration and credit risk), several conclusions changed materially. The headline 12-month lookback result dropped below Nifty buy-and-hold on both CAGR and Sharpe. The debt proxy wasn't a minor modeling assumption; it was load-bearing.
+
+---
+
+## Finding the Right Lookback Period
+
+With the full 19-year window and corrected debt proxy, I tested lookback periods of 1, 2, 3, 6, 9, and 12 months, scored by the *worst-case Sharpe ratio* across the two eras (because I wanted a parameter that doesn't fall apart in either regime).
+
+The 9-month lookback came out on top, with a worst-case Sharpe of 0.53–0.56 across indices. The 12-month lookback — the standard in much of the momentum literature — scored -0.02 to 0.14 on the same metric. That gap widened dramatically after the debt proxy correction.
+
+> **Key finding:** 9 months is the lookback to use. Not because 9 has a special property, but because it's less extreme than 3 months (which is regime-fragile) and clearly better than 12 months once you're using a realistic cash-parking return. Don't dynamically adjust the lookback over time — I tested walk-forward adaptive re-selection, and it actively hurts performance.
+
+The walk-forward test was a critical sanity check. I built a proper adaptive system that periodically re-selects the lookback using only trailing, already-realized performance, then walks forward. Every configuration I tried — across 2-year, 3-year, and 5-year selection windows with 6-month and 12-month re-evaluation cycles — underperformed a plain fixed 9-month lookback. The adaptive system produced a Sharpe of -0.12 to 0.02 vs. 0.50 for fixed 9-month over identical windows. The selected lookback flip-flopped at 12 of 16 annual re-evaluations — a textbook performance-chasing failure.
+
+| Strategy | CAGR | Sharpe |
+|---|---|---|
+| Walk-forward adaptive (3yr window, annual) | 4.5% | -0.12 |
+| Fixed 3-month lookback | 9.9% | 0.36 |
+| Fixed 9-month lookback | 9.0% | 0.28 |
+| Fixed 12-month lookback | 8.6% | 0.25 |
+
+---
+
+## Crash Filters: Relative Return vs. Moving Average
+
+The crash filter is the mechanism that moves you from equities to cash during sustained downturns. I tested two approaches: the relative-return filter (is Nifty's trailing return below the liquid fund's?) and a simple daily moving average (DMA) crossover (is Nifty below its 150/200/250-day moving average?).
+
+After the debt proxy correction, the relative-return filter won both eras clearly, which settled the question. But the *mechanism analysis* I ran was more interesting than the headline result.
+
+I cataloged all 12 Nifty 50 drawdown episodes of 10% or more between 2008 and 2026 and measured how quickly each filter detected them, along with the false-positive rate (crash signal not followed by a 5%+ decline within 6 months).
+
+The relative-return filter completely missed the 2011 correction (-24.6% peak to trough) — it never triggered before the market hit the trough. Every DMA window caught it within a month. However, the DMA lagged roughly two months behind in the 2020 COVID crash, which was a fast V-shaped selloff that a moving average simply can't react to quickly enough. The relative-return filter caught that one immediately.
+
+Neither filter dominates. They fail in different regimes — DMA misses fast crashes, the relative-return filter can miss slow grinds. But once the liquid fund was used as the cash proxy, the relative-return filter's overall numbers were better in both eras, so that's what the strategy uses.
+
+---
+
+## Adding Nifty Next 50 — The One Enhancement That Worked
+
+I tested adding several index segments as additional rotation options: Nifty Next 50, Midcap 150, and Smallcap 250. The idea is simple — instead of just choosing between Nifty 50 and Gold each month, let the momentum signal also consider these broader segments.
+
+Adding Nifty Next 50 alone was a consistent win in both eras. In Era A, the Sharpe ratio jumped from 0.03 to 0.29. In Era B, it went from 0.41 to 0.69 (and even higher after the debt proxy correction — up to 0.82).
+
+Adding Midcap 150 and Smallcap 250 on top of that did nothing useful. The Era B Sharpe actually dipped from 0.69 to 0.62 — likely extra turnover without proportionally higher returns.
+
+> **Key finding:** The deployed strategy rotates between Nifty 50, Nifty Next 50, Gold, and a Liquid Fund. Nifty Next 50 is the only additional segment with consistent, both-eras evidence behind it. Skip Midcap and Smallcap.
+
+---
+
+## The Survivorship Bias Trap
+
+This section is about the stock-picking overlay I tested — ranking individual stocks within the Nifty 50 by momentum and holding the top 10. The first version of this test used today's Nifty 50 constituent list applied across the entire 19-year history. That's survivorship bias: you're retroactively excluding every company that was once in the index but got removed (often precisely *because* it crashed — like Yes Bank in 2020 or Satyam in 2009).
+
+To fix this, I reconstructed the actual point-in-time constituent membership of Nifty 50 using the inclusion/exclusion event log from niftyhistory.in. Even that required manual work — the site's own pre-built constituent list was broken (missing RELIANCE, HDFCBANK, ICICIBANK, and others from every single row, which is impossible for real Nifty 50 history). I had to rebuild membership by starting from today's verified list and walking backward through the event log, undoing each rebalance.
+
+| Method | CAGR | Sharpe | Max Drawdown |
+|---|---|---|---|
+| Point-in-time (corrected) | 11.04% | 0.37 | -23.31% |
+| Today's list (survivorship-biased) | 14.46% | 0.58 | -20.96% |
+| Plain Nifty 50, no overlay | 9.55% | 0.31 | -16.84% |
+
+Survivorship bias inflated CAGR by about 3.4 percentage points and the Sharpe ratio by 57%. The overlay's drawdown, which had looked "similar" to the plain index, was actually *worse* once corrected (-23.31% vs. -16.84%). The stock-picking edge is real but much smaller than it first appeared, and it comes with meaningfully higher drawdown risk — not the near-free return enhancement the biased backtest suggested.
+
+I also found that the top-5 variant (appealing because it needs less capital per position) actually underperforms the plain Nifty 50 index on every metric once the timing signal is corrected. There's no validated way to run this overlay below about ₹2 lakh in capital.
+
+---
+
+## Pure Stock Momentum: Higher Returns, Higher Pain
+
+Separately from the dual-momentum asset rotation, I tested a pure stock momentum strategy: every month, rank the Nifty 100 universe by trailing return and hold the top N stocks, with no crash filter, no gold leg, no cash parking. Always fully invested in equities.
+
+The best configurations clustered around 20–30 stocks with a 12-month lookback, consistent with the academic momentum literature (longer formation periods and wider baskets reduce noise).
+
+| Strategy | CAGR | Sharpe | Max Drawdown |
+|---|---|---|---|
+| Top-20, 12m lookback | 16.0% | 0.57 | -46.3% |
+| Top-30, 12m lookback | 15.8% | 0.56 | -44.9% |
+| Top-20, 12-1 (academic) | 15.2% | 0.51 | -46.2% |
+| Nifty 50 buy-and-hold | 8.7% | 0.22 | -55.1% |
+
+The returns are impressive. The catch is that maximum drawdown runs to -45% to -50% — roughly three times what the dual-momentum strategy's crash filter delivers. This is the entire point of the crash filter made concrete: "no asset rotation" and "no drawdown protection" are the same tradeoff. A portfolio taking a 45%+ drawdown is a real, psychological and financial test to sit through.
+
+This is era-robust (Sharpe of 0.46 pre-2016 and 0.66 post-2016), and point-in-time corrected. It's a real finding, not a data artifact. But it's a fundamentally different risk profile from the dual-momentum strategy — higher returns bought with higher pain, not a strictly better alternative.
+
+---
+
+## The Live Signal Generator
+
+The project includes a Node.js script (`scripts/monthly-signal.js`) that computes the live monthly signal. It fetches recent data, applies the fixed decision rules (9-month lookback, relative-return crash filter, Nifty 50 vs. Nifty Next 50 vs. Gold vs. Liquid Fund rotation), tracks holding state and switch history, and flags hard-stop conditions.
+
+Setting it up is straightforward:
+
+```bash
+git clone https://github.com/kiranmurali93/momentum-backtest.git
+cd momentum-backtest
+cp config.example.json config.json   # fill in your portfolio value
+npm run signal
+```
+
+The script outputs a signal report telling you what to hold this month and whether a switch is needed. The config file and state file are gitignored since they contain personal portfolio figures.
+
+For the backtest notebooks, it's Python (`notebooks/starter.ipynb`). Run `notebooks/data.ipynb` first on a fresh clone to fetch and cache all the historical data.
+
+---
+
+## What I'd Tell Someone Starting This Today
+
+**Your first backtest will lie to you.** Not because the code is wrong, but because 10 years of data in one market regime will give you confident, reproducible, utterly misleading results. Extend the window. Split by eras. Test the bad decades, not just the good ones.
+
+**The boring assumptions are load-bearing.** Swapping the cash-parking proxy from an income fund to a liquid fund changed which lookback period was best, which crash filter won, and whether the base strategy even beat buy-and-hold. Tax modeling, transaction costs, and data adjustments for splits and scheme code changes aren't footnotes — they're structural.
+
+**Survivorship bias is not a theoretical concern.** It inflated my stock-picking results by 57% on Sharpe ratio. If your backtest uses today's index constituents applied across history, your results are flattering themselves. Reconstructing point-in-time membership is hard (I had to manually rebuild it from an event log because the only free source's pre-built data was broken), but it's the difference between a real finding and a comfortable fiction.
+
+**Don't optimize the optimizer.** Walk-forward adaptive lookback selection sounds rigorous. In practice, it whipsawed at 12 of 16 annual checkpoints and underperformed a plain fixed parameter by a wide margin. Pick a defensible lookback and hold it. The urge to dynamically adjust is the same impulse the system is designed to protect you from.
+
+**More complexity is not more edge.** Adding Nifty Next 50 helped. Adding Midcap and Smallcap on top of it didn't. The DMA crash filter had an interesting mechanism (it catches slow grinds the relative-return filter misses) but didn't improve overall results. The simplest version of the strategy that survives both eras is the one to deploy.
+
+**Know what you're trading away.** The pure stock momentum strategy returned 16% CAGR vs. the dual-momentum's ~9–11%. The drawdown was -46% vs. -15%. Those are not two versions of the same strategy — they're fundamentally different answers to the question of how much pain you're willing to endure for how much return. Be honest about which one you can actually sit through.
+
+---
+
+## The Code
+
+Everything — the data pipeline, the backtest engine, the parameter sweep, the survivorship bias correction, the findings log, and the live signal generator — is open source at [github.com/kiranmurali93/momentum-backtest](https://github.com/kiranmurali93/momentum-backtest).
+
+The [findings log](https://github.com/kiranmurali93/momentum-backtest/blob/main/findings.md) is a chronological record of every test and every conclusion reversal, kept intentionally as a history of how the understanding evolved rather than a cleaned-up summary. If you want to see what breaking your own conclusions looks like in practice, that's the file to read.
+
+> **Disclaimer:** This is a personal research project, not investment advice. Backtested results are not a guarantee of future performance, and nothing here accounts for your individual financial situation or risk tolerance. Consult a SEBI-registered advisor before making investment decisions.

@@ -1,0 +1,167 @@
+---
+title: "File Signature: How Systems Actually Detect File Types"
+pubDate: 2026-03-11
+readTime: "7 min read"
+tags: ["Systems", "Security", "Golang"]
+summary: "A file extension is a hint, not a fact. How magic bytes actually identify a file — and where signature-based detection breaks down."
+canonical: "https://blog.kiranpk.dev/file-signature-how-systems-actually-detect-file-types"
+---
+
+Most people assume the file extension tells the system what type of file it is. It's an intuitive assumption — `.png` means image, `.pdf` means document, `.exe` means executable. At first glance, this seems completely reasonable.
+
+But here's the thing: file extensions are just part of the filename. They're a label, not a guarantee.
+
+Consider this scenario:
+
+```text
+malware.exe  →  renamed  →  totally-safe-image.png
+```
+
+The filename changed. The bytes inside the file? Not a single one. If your system relied purely on the extension to decide how to handle that file, it just got fooled. This is a real technique used to sneak malicious files past unsuspecting users.
+
+So how do operating systems and tools actually detect the real file type? They don't look at the name at all — they look inside the file itself.
+
+## Magic Numbers: The Fingerprints of Files
+
+Every common file format has a sequence of bytes baked into it that acts as its identity. These bytes — usually sitting right at the start of the file — are called **file signatures**, or **magic numbers**.
+
+When a program wants to know what a file really is, it opens the file and reads those first few bytes, then compares them against a table of known signatures.
+
+Take a PNG image. No matter what you name it, the first four bytes will always be `89 50 4E 47` — which in ASCII reads `‰PNG`.
+
+The same is true for PDFs (`%PDF-`), SQLite databases (literally `SQLite format 3`), and dozens of other formats.
+
+In our Go detector, we represent each of these as a struct:
+
+```go
+type FileMagicNumberMapping struct {
+    Name        string
+    Signature   []byte
+    Offset      int
+    CustomCheck func(filePath string) bool
+}
+```
+
+And the known signatures are defined in a lookup table:
+
+```go
+var FileType = []FileMagicNumberMapping{
+    {"PNG Image",        []byte{0x89, 0x50, 0x4E, 0x47},             0, nil},
+    {"PDF Document",     []byte{0x25, 0x50, 0x44, 0x46, 0x2D},       0, nil},
+    {"SQLite Database",  []byte{0x53, 0x51, 0x4C, 0x69, 0x74, 0x65, 0x20, 0x66}, 0, nil},
+    // ...
+}
+```
+
+When we run the detector, we open the file and walk through this list, reading just enough bytes at the right position to check for a match:
+
+```go
+for _, s := range FileType {
+    header := make([]byte, len(s.Signature))
+    _, err := file.ReadAt(header, int64(s.Offset))
+    if err != nil {
+        continue
+    }
+
+    if bytes.HasPrefix(header, s.Signature) {
+        fmt.Printf("Match found: %s\n", s.Name)
+        found = true
+        break
+    }
+}
+```
+
+The key function here is `file.ReadAt` — it lets us read bytes from any position in the file. Now this is just a base case.
+
+## Not Every Signature Starts at Zero
+
+It would be convenient if every file format stored its magic bytes at the very beginning. Most do. But some don't.
+
+ISO disk images are the classic example. Their identifying bytes (`43 44 30 30 31`, or `CD001`) sit at byte offset **32769** — deep into the file, not at the start. This is a deliberate part of the ISO 9660 spec; the first 32KB is reserved for boot code.
+
+This is exactly why the struct has an `Offset` field, and why `ReadAt` is the right tool for the job:
+
+```go
+{"ISO Image", []byte{0x43, 0x44, 0x30, 0x30, 0x31}, 32769, nil},
+```
+
+Instead of reading from position 0, we jump directly to byte 32769 and check for the signature there.
+
+## When Bytes Aren't Enough
+
+Here's where things get interesting. Not every file format has a reliable magic number. Scripts, config files, and plain text files have no standardized binary header — they're just... text.
+
+Many scripts start with a **shebang line**: a special first line that tells the shell which interpreter to use.
+
+```text
+#!/usr/bin/python3
+```
+
+The `#!` bytes (`0x23 0x21`) do act as a kind of signature, but they're shared by every type of script — Python, Bash, Ruby, Perl. The bytes alone only tell you "this is a script." To know which script, you have to actually read the line.
+
+This is called **content sniffing** — inspecting the file's actual content rather than relying on fixed byte patterns. In `scripts_check.go`, we handle this case:
+
+```go
+func ScriptCheck(fileName string) bool {
+    file, err := os.Open(fileName)
+    if err != nil {
+        return false
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    if scanner.Scan() {
+        line := scanner.Text()
+        if strings.HasPrefix(line, "#!") && strings.Contains(line, "python") {
+            fmt.Printf("Match found: Python Script\n")
+            return true
+        }
+        // Fallback: look for common Python patterns
+        if strings.HasPrefix(line, "import ") || strings.HasPrefix(line, "def ") || strings.Contains(line, "print(") {
+            fmt.Printf("Match found: Python Script\n")
+            return true
+        }
+    }
+    return false
+}
+```
+
+Notice the fallback: if there's no shebang, we look for patterns like `import`, `def`, or `print(` — things that strongly suggest Python code. This is a rougher heuristic, but it's how you handle formats that were never designed to be identified by a fixed header.
+
+This is why the `CustomCheck` field exists in our struct. For file types where raw byte comparison isn't sufficient, we plug in a function that can do deeper inspection. The byte signature gives us a quick first filter (`#!`), and if that matches, the custom check takes over to figure out the specifics.
+
+Your browser does exactly the same thing. When a server sends a file with the wrong MIME type — or no type at all — the browser reads the content and makes its best guess. That's content sniffing in the wild.
+
+## The Tricky Case: Container Formats
+
+There's one more scenario worth knowing about. Many modern file formats — DOCX, XLSX, PPTX, JAR, APK — aren't really unique formats at all. They're ZIP archives with a specific internal structure. And they all start with the same signature:
+
+```text
+50 4B 03 04
+```
+
+That's the ZIP magic number. So if you only check the magic bytes, every Word document, every Excel spreadsheet, and every Android app looks identical — just "a ZIP file."
+
+To tell them apart, you have to open the archive and inspect what's inside. A DOCX will contain `word/document.xml`. An XLSX will have `xl/workbook.xml`. The container tells you the encoding; the contents tell you the actual format.
+
+This is a known limitation of pure signature-based detection, and it's a good example of where content sniffing and deeper inspection become necessary — the magic number is just the starting point.
+
+## The Limits of Magic Numbers
+
+Magic numbers are remarkably useful, but they're not a perfect solution.
+
+- **Some formats have no signature at all.** Plain text files, CSVs, JSON, log files — none of these have defined magic bytes. You can't fingerprint a `.csv` the way you fingerprint a `.png`. Detection has to rely on content analysis, file extension as a hint, or context.
+- **Some formats share a signature.** As we just saw with ZIP-based formats, a shared magic number means you need additional inspection to disambiguate. The signature gets you to the right neighborhood; you still have to find the right house.
+
+The `file` command on Linux, and MIME detection in browsers, both combine these techniques — magic numbers, content sniffing, and context — to make their best determination.
+
+## Wrapping Up
+
+Next time you rename a file, remember: the extension is just a label. The truth is in the bytes.
+
+File signatures are one of those concepts that seem small until you realize how much of your operating system, your browser, and your security tooling depends on them quietly doing their job. Understanding how they work — and where they fall short — is useful any time you're building something that needs to handle files reliably.
+
+The full source for the detector covers the major cases: fixed-offset signatures, content sniffing via custom checks, and the BOM-based detection used to identify Unicode text encoding variants.
+
+- [Source on GitHub](https://github.com/kiranmurali93/learning/tree/main/file-signature)
+- [Magic number (programming) — Wikipedia](https://en.wikipedia.org/wiki/Magic_number_(programming))

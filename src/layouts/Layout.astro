@@ -7,9 +7,46 @@ import Footer from '../components/Footer.astro';
 interface Props {
   title: string;
   description?: string;
+  ogType?: "website" | "article";
+  ogImage?: string;
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  noindex?: boolean;
 }
 
-const { title, description = "Kiran PK — Software Engineer" } = Astro.props;
+const {
+  title,
+  description = "Kiran PK — Software Engineer. Backend-focused engineer building and owning production systems across fintech and SaaS.",
+  ogType = "website",
+  ogImage = "/profileImg.jpg",
+  publishedTime,
+  modifiedTime,
+  noindex = false,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const absoluteOgImage = new URL(ogImage, Astro.site);
+
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Kiran P K",
+  url: "https://kiranpk.dev/",
+  jobTitle: "Software Engineer",
+  email: "mailto:kiranmurali93@gmail.com",
+  sameAs: [
+    "https://x.com/kiran__pk",
+    "https://www.linkedin.com/in/kiran-p-k/",
+    "https://github.com/kiranmurali93",
+  ],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Kiran PK",
+  url: "https://kiranpk.dev/",
+};
 ---
 
 <!doctype html>
@@ -26,8 +63,32 @@ const { title, description = "Kiran PK — Software Engineer" } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:site_name" content="Kiran PK" />
+    {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    {modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@kiran__pk" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absoluteOgImage} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="alternate" type="application/rss+xml" title="Kiran PK — Writing" href="/rss.xml" />
+
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
+    <slot name="head" />
+
     <ClientRouter />
     <script is:inline>
       (function () {

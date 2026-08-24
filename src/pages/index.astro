@@ -6,7 +6,7 @@ const profile = await getEntry('profile', 'info');
 const { data } = profile;
 ---
 
-<Layout title="Kiran PK — Software Engineer">
+<Layout title="Kiran PK — Software Engineer" description={data.aboutBrief}>
   <section class="kpk-section max-w-[760px] mx-auto px-8" style="padding-top: 64px; padding-bottom: 72px;">
     <p class="text-[15px] tracking-wide uppercase mb-3" style="color: var(--accent);">{data.tagline}</p>
     <h1 class="kpk-h1 font-bold mb-5" style="font-size: 48px; line-height: 1.15; color: var(--heading);">

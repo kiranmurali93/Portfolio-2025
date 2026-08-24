@@ -3,6 +3,7 @@ const navItems = [
   { title: "About", url: "/" },
   { title: "Experience", url: "/experience" },
   { title: "Projects", url: "/projects" },
+  { title: "Blogs", url: "/blog" },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -30,7 +31,6 @@ const isActive = (url: string) => (url === "/" ? currentPath === "/" : currentPa
           {item.title}
         </a>
       ))}
-      <a href="https://blog.kiranpk.dev" target="_blank" rel="noopener" class="text-[15px] px-3.5 py-2 rounded-full transition-colors" style="color: var(--muted);">Blogs</a>
       <a href="/assets/Kiran_PK_Resume.pdf" download="Kiran_PK_Resume.pdf" class="text-[15px] px-3.5 py-2 rounded-full transition-colors" style="color: var(--muted);">Résumé</a>
       <div class="flex items-center gap-3.5 flex-shrink-0 whitespace-nowrap ml-1">
         <button
@@ -76,7 +76,6 @@ const isActive = (url: string) => (url === "/" ? currentPath === "/" : currentPa
         {item.title}
       </a>
     ))}
-    <a href="https://blog.kiranpk.dev" target="_blank" rel="noopener" class="py-3 text-base" style="color: var(--text);">Blogs</a>
     <a href="/assets/Kiran_PK_Resume.pdf" download="Kiran_PK_Resume.pdf" class="py-3 text-base" style="color: var(--text);">Résumé</a>
     <button type="button" data-copy-email="kiranmurali93@gmail.com" class="py-3 text-base text-left bg-transparent border-0 cursor-pointer" style="color: var(--text);">Contact</button>
     <button type="button" id="mobile-theme-toggle" class="flex items-center gap-2.5 py-3 text-base cursor-pointer bg-transparent border-0 text-left" style="color: var(--text);">

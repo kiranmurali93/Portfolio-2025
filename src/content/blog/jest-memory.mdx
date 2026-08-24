@@ -1,0 +1,66 @@
+---
+title: "Navigating the Jest Memory Issue — My Workaround"
+pubDate: 2023-09-09
+readTime: "3 min read"
+tags: ["Testing", "Node.js", "Debugging"]
+summary: "Our backend API suite ran fine until it didn't — heap climbing until the runner died. How I chased it down and the workaround that kept CI green."
+canonical: "https://blog.kiranpk.dev/navigating-the-jest-memory-issue-my-workaround"
+---
+
+Let's dive right into the issue our team was facing. We rely on one of the most popular JavaScript testing frameworks, Jest, for rigorously testing our backend APIs. Initially everything was sailing smoothly — setup was a breeze and our tests ran fine. We were okay with how things were going.
+
+However, as the codebase grew and we added more APIs, problems started cropping up. The test suite began taking longer to complete and memory consumption started to skyrocket. Our initial solution was to bump up the heap with `--max-old-space-size`. It worked like a charm — for a while.
+
+As time passed we kept increasing the heap allocation until we realised this band-aid wasn't sustainable. We could no longer run tests on our local machines, and even in the pipeline tests were failing on mysterious memory issues. That's when we decided to tackle it head-on.
+
+## The hunt
+
+Before diving in, I checked the Jest GitHub repository for similar issues. To my surprise there were several reported, but none of the proposed solutions did the trick for us. So I embarked on a trial-and-error journey.
+
+Uncertain whether the issue lay with our code or with Jest itself, I started by refactoring some code and tests. After rerunning, I waited about 12 minutes only to see no improvement in memory usage. (You can monitor memory in Jest with the `--logHeapUsage` argument.)
+
+Feeling a bit lost, I searched more blogs and videos and came across the term "memory leak." With this newfound knowledge I began hunting for leaks, feeling like a detective in Chrome DevTools analysing heap usage heat maps. I zoomed in and out of those charts repeatedly, and was ultimately tired and still clueless.
+
+Back to the GitHub issues, reading comments one after another, still no definitive solution. It dawned on me that maybe it wasn't our problem — perhaps it was just how Jest operated. My first reaction was "let's switch to another testing framework!" But the reality of rewriting the entire suite hit us like a ton of bricks, especially with a small team: we were weeks away from rewriting the frontend from React with Material-UI to Vue.js with Tailwind, and we still had bugs to fix and features to ship. So I gave it a few more tries before throwing in the towel.
+
+## The observation
+
+This time I ran individual tests one by one, then everything together. Run individually, tests ran smoothly and memory stayed within limits. As more files were included, memory consumption began to swell — Jest seemed to increase heap usage after each test. I didn't know the root cause, but I had a workaround: if it behaves when run individually, why not always run it that way?
+
+## The workaround
+
+```bash
+base_dir=""
+integration_test_dir=${base_dir}tests/integrationTests
+integration_directory_list=($(ls ${integration_test_dir}))
+
+for dir in "${integration_directory_list[@]}"; do
+    echo "$dir"
+    npm run test ${integration_test_dir}/${dir}
+done
+
+unit_test_dir=${base_dir}tests/unitTests
+unit_directory_list=$(ls ${unit_test_dir})
+
+for unit in "${unit_directory_list[@]}"; do
+    echo "$unit"
+    npm run test ${unit_test_dir}/${unit}
+done
+
+echo "Testing completed"
+```
+
+Then I modified `package.json`:
+
+```json
+{
+  "test": "NODE_ENV=test NODE_OPTIONS='--max-old-space-size=6144' jest --runInBand",
+  "test:local": "bash scripts/test-local.sh"
+}
+```
+
+```bash
+npm run test:local
+```
+
+I gave this approach a shot, and voilà — it worked. I realise this isn't a definitive solution but a hack to keep things running until someone finds the proper fix.

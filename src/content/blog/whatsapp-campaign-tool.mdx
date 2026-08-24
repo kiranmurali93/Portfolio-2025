@@ -1,0 +1,33 @@
+---
+title: "How I Built a WhatsApp Campaign Internal Tool"
+pubDate: 2024-01-05
+readTime: "3 min read"
+tags: ["Node.js", "AWS", "Architecture"]
+summary: "Replacing manually-run scripts with a real scheduling and execution system for outreach campaigns — EventBridge, Lambda, and a CSV."
+canonical: "https://blog.kiranpk.dev/whatsapp-campaign-tool"
+---
+
+Campaign management is a critical part of any organisation's outreach strategy, and an effective scheduling and execution system can significantly improve its success. Previously we ran manual scripts against the Freshchat APIs — an API wrapper around the WhatsApp API — which was repetitive work for developers. So I automated the process and built an internal tool around it.
+
+## Architecture
+
+When a user uploads a campaign, the scheduling API creates the campaign and schedules an event at the specified time. The event is associated with a campaign ID and time data, and the scheduler returns an event ID which is stored as a property of the campaign. That lets us modify the scheduled event later — but only for campaigns that haven't happened yet. Scheduling is done using **AWS EventBridge rules**.
+
+At the scheduled time a Lambda function is triggered to execute the campaign. It calls an internal API to initiate the run, keeping the whole process automated.
+
+The run-campaign process parses a CSV file to generate parameters for a Freshchat API call. Freshchat returns a response object with a response ID; those IDs and their statuses are saved for future reference. When listing campaigns, any message with a status other than Sent, Delivered, or Failed triggers a Freshchat status check to update the value.
+
+Campaigns can be edited with the provided schedule ID. If the schedule time changes during editing, a new event is generated with the corresponding campaign ID.
+
+When the run-campaign API is called it checks the scheduled time. If there's a difference of five minutes or more between the request and the scheduled time, the campaign is ignored — this prevents unintended or premature executions.
+
+## APIs and payloads
+
+- **Create / edit campaign** — `POST /ss/admin/campaigns` and `PATCH /ss/admin/campaigns`. Create payload: `{ csv, templateId, numberOfPlaceholders, dateTime, campaignName }`; edit adds `id`.
+- **List campaigns** — `GET /ss/admin/campaigns`, returning `{ id, campaignName, templateId, total, success, failed, createdAt, scheduledAt, status, csvUploaded }`.
+- **Test message** — `POST /ss/admin/test-campaign` with `{ phoneNumber, placeholders, templateId }`.
+
+## Database tables
+
+- **Campaign** — `id, name, templateId, totalMessages, successMessages, failureMessages, inQueue, createdAt, scheduledAt, status, fileUrl`.
+- **Message** — `id, messageId, campaignId, status, phoneNumber`.
