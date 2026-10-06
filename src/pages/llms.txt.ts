@@ -22,7 +22,7 @@ export const GET: APIRoute = async ({ site }) => {
   lines.push('## Pages');
   lines.push('');
   lines.push(`- [About](${base}/): Background, current role, and how to get in touch.`);
-  lines.push(`- [Experience](${base}/experience): Work history — GeoServes, Dexif, SuperHire, and earlier roles.`);
+  lines.push(`- [Experience](${base}/experience): Work history — GeoServe, Dexif, SuperHire, and earlier roles.`);
   lines.push(`- [Projects](${base}/projects): Software projects, including Scalperr and FocusFlow.`);
   lines.push(`- [Writing](${base}/blog): Technical blog posts on systems, concurrency, Go, and debugging.`);
   lines.push('');

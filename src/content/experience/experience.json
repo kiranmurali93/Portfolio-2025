@@ -2,15 +2,19 @@
   "roles": [
     {
       "role": "SDE 2",
-      "company": "GeoServes",
+      "company": "GeoServe",
       "location": "Bengaluru",
       "dates": "Jun 2025 – Present",
       "current": true,
       "bullets": [
-        "Led an end-to-end rebuild of an acquired laytime-claims platform, delivering it to production in 6 months with full ownership of architecture and release lifecycle.",
-        "Own backend delivery and production monitoring for a Voyage Optimization platform spanning route generation, PDF generation, and a DB sync cron service.",
-        "Introduced unit testing from scratch using Jest and dependency injection patterns across services.",
-        "Mentored interns and SDE-1 engineers, establishing reusable service patterns and testing standards."
+        "Own backend delivery, release lifecycle (biweekly), and production monitoring for a voyage-optimization platform across a multi-service architecture including route generation, PDF generation, and a DB sync service.",
+        "Designed and shipped a real-time alerting platform end-to-end: pluggable handler registry, alert lifecycle management, SSE delivery with DB-polling and retry, Kafka producer→consumer→email via Microsoft Graph, and configurable per-user thresholds.",
+        "Designed a multi-layered algorithm for detecting passed/skipped route points using distance-comparison heuristics, route alignment, and geometric projection fallback — significantly reducing false positives.",
+        "Owned a geospatial feature epic (~30 stories): interactive polygon zone management with coordinate validation, overlap detection, and archival lifecycle with dependency guards.",
+        "Rebuilt an acquired claims platform from scratch — designed architecture, built auth (Microsoft SSO, JWT rotation), core calculation engine, WebSocket-based file upload with S3 signed URLs, and an ETL service (cron-based API polling, CSV transformation, automated draft generation). Empty repo to production in 6 months.",
+        "Rolled out SonarQube with Jest coverage gates across 5 services. Introduced unit testing from scratch with dependency injection patterns.",
+        "Fixed a production memory leak via compression-enabled caching with TTL tuning; resolved DB connection-pool exhaustion; moved API tokens from client to server-side brokers with domain restriction and CSP headers.",
+        "Delivered 197 tickets and 1,000+ commits across 10 services; authored 19 engineering docs including org-wide API testability standards."
       ]
     },
     {
