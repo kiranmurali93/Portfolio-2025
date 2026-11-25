@@ -16,7 +16,7 @@ interface Props {
 
 const {
   title,
-  description = "Kiran PK — Software Engineer. Backend-focused engineer building and owning production systems across fintech and SaaS.",
+  description = "Kiran PK | Software Engineer. Backend-focused engineer building and owning production systems across fintech and SaaS.",
   ogType = "website",
   ogImage = "/profileImg.jpg",
   publishedTime,
@@ -86,7 +86,7 @@ const websiteJsonLd = {
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="alternate" type="application/rss+xml" title="Kiran PK — Writing" href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Kiran PK | Writing" href="/rss.xml" />
 
     <script is:inline type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
@@ -203,7 +203,7 @@ const websiteJsonLd = {
           }
 
           copyText(email).then(function () {
-            showToast('Email copied — reach out at ' + email);
+            showToast('Email copied. Reach out at ' + email);
           });
         });
       })();

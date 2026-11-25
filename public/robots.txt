@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# AI answer engines / assistants — explicitly allowed
+# AI answer engines / assistants: explicitly allowed
 User-agent: GPTBot
 Allow: /
 

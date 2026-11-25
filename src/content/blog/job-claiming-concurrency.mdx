@@ -1,19 +1,19 @@
 ---
-title: "Concurrency in Practice — A Job Claiming System That Works"
+title: "Concurrency in Practice: A Job Claiming System That Works"
 pubDate: 2025-05-01
 readTime: "8 min read"
 tags: ["Concurrency", "Postgres", "Golang"]
-summary: "Concurrency bugs rarely show up in development — they show up when real users hit the same row at once. Building a claim flow that never oversells a job."
+summary: "Concurrency bugs rarely show up in development; they show up when real users hit the same row at once. Building a claim flow that never oversells a job."
 canonical: "https://blog.kiranpk.dev/concurrency-in-practice-a-job-claiming-system-that-works"
 ---
 
-Concurrency issues don't always show up during development — they usually surface when multiple users interact with your system simultaneously. For small-scale applications, this might not even be a concern. But if you're a developer curious about how to handle concurrency the right way, this post is for you.
+Concurrency issues don't always show up during development; they usually surface when multiple users interact with your system simultaneously. For small-scale applications, this might not even be a concern. But if you're a developer curious about how to handle concurrency the right way, this post is for you.
 
 ## The use case
 
-Let's consider a job posting platform for freelance recruiters. Companies post jobs, and recruiters can claim the jobs they want to work on. To avoid overwhelming companies with too many applications, a single job can only be claimed by a limited number of recruiters — say, four. So we need a concurrency-safe mechanism to ensure no more than the allowed number of claims are made per job.
+Let's consider a job posting platform for freelance recruiters. Companies post jobs, and recruiters can claim the jobs they want to work on. To avoid overwhelming companies with too many applications, a single job can only be claimed by a limited number of recruiters (say, four). So we need a concurrency-safe mechanism to ensure no more than the allowed number of claims are made per job.
 
-Some of you might think: "That sounds simple — we just query the number of claims for a job, and if it's greater than or equal to 4, return an error, right?" Something like this:
+Some of you might think: "That sounds simple; we just query the number of claims for a job, and if it's greater than or equal to 4, return an error, right?" Something like this:
 
 ```go
 count := db.Query(`SELECT COUNT(*) FROM job_claims WHERE job_id = ?`)
@@ -23,9 +23,9 @@ if count >= 4 {
 // proceed to insert claim
 ```
 
-If so then you're almost right — but not completely.
+If so, then you're almost right, but not completely.
 
-> The problem lies in **how web servers handle requests** and how we think they do. We imagine our logic runs sequentially: a request comes in, checks the count, inserts the claim, done. In reality multiple requests hit the server at the same time, and each of them can execute that same `SELECT COUNT(*)` before any of them inserts. Two recruiters read the same count (say, 3), both believe the job is available, and both insert — a classic **race condition**.
+> The problem lies in **how web servers handle requests** and how we think they do. We imagine our logic runs sequentially: a request comes in, checks the count, inserts the claim, done. In reality, multiple requests hit the server at the same time, and each of them can execute that same `SELECT COUNT(*)` before any of them inserts. Two recruiters read the same count (say, 3), both believe the job is available, and both insert: a classic **race condition**.
 
 ## Setting up
 
@@ -41,11 +41,11 @@ For this demo I'll be using **Golang** and **PostgreSQL**. Here's the folder str
 |- test.go
 ```
 
-- `db/db.go` — handles the PostgreSQL connection setup.
-- `handlers/jobs.go` — contains the business logic for claiming a job.
-- `.env` — stores the secrets you don't want in the code.
-- `main.go` — entry file; starts the HTTP server and sets up routes.
-- `test.go` — simulates multiple concurrent recruiters claiming the same job.
+- `db/db.go`: handles the PostgreSQL connection setup.
+- `handlers/jobs.go`: contains the business logic for claiming a job.
+- `.env`: stores the secrets you don't want in the code.
+- `main.go`: entry file; starts the HTTP server and sets up routes.
+- `test.go`: simulates multiple concurrent recruiters claiming the same job.
 
 We need four tables: `companies` (registered companies), `jobs` (postings), `recruiter` (signed-up recruiters), and `job_claims` (the many-to-many record of who claimed what).
 
@@ -148,9 +148,9 @@ _, err = tx.Exec(`INSERT INTO job_claims (job_id, recruiter_id) VALUES ($1, $2)`
 err = tx.Commit()
 ```
 
-Run the test again and all five still succeed. Unfortunately this doesn't help either.
+Run the test again and all five still succeed. Unfortunately, this doesn't help either.
 
-> Transactions only isolate their own changes. Without explicitly locking rows, multiple transactions can read the same state and make decisions based on it — the same race condition.
+> Transactions only isolate their own changes. Without explicitly locking rows, multiple transactions can read the same state and make decisions based on it: the same race condition.
 
 ## The fix: lock the row
 
@@ -197,7 +197,7 @@ Recruiter 4: 200 OK
 Recruiter 1: 403 Forbidden
 ```
 
-Only four claims succeed, the fifth fails. The race condition is gone.
+Only four claims succeed; the fifth fails. The race condition is gone.
 
 ## Lock the decision, not the write
 
@@ -206,8 +206,8 @@ You might notice we lock a row in `jobs` but write to `job_claims`. That's inten
 1. The job (in `jobs`) is the logical resource being contended for.
 2. The claims (in `job_claims`) are just how we track that allocation.
 
-By locking the job row, every decision about whether that job can accept more claims is serialised — they happen one after another, not simultaneously. That's what prevents several transactions from all seeing "3 claims" and all proceeding.
+By locking the job row, every decision about whether that job can accept more claims is serialised: they happen one after another, not simultaneously. That's what prevents several transactions from all seeing "3 claims" and all proceeding.
 
-Another approach would be a separate `job_claims_count` table tracking the current count per job, and locking rows there instead — same guarantee, potentially less lock contention on the main `jobs` table.
+Another approach would be a separate `job_claims_count` table tracking the current count per job, and locking rows there instead: same guarantee, potentially less lock contention on the main `jobs` table.
 
 - [Implementation on GitHub](https://github.com/kiranmurali93/learning/tree/main/job-claim-concurrency-demo)

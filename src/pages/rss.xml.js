@@ -6,8 +6,8 @@ export async function GET(context) {
   const sorted = posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 
   return rss({
-    title: 'Kiran PK — Writing',
-    description: 'Notes from production — concurrency, databases, testing, and the bugs that taught me something.',
+    title: 'Kiran PK | Writing',
+    description: 'Notes from production: concurrency, databases, testing, and the bugs that taught me something.',
     site: context.site,
     items: sorted.map((post) => ({
       title: post.data.title,

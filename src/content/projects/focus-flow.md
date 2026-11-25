@@ -1,6 +1,6 @@
 ---
 title: "FocusFlow"
-description: "A Chrome extension for staying focused — block distracting sites with custom goals and reflective prompts instead of rigid blacklists."
+description: "A Chrome extension for staying focused: block distracting sites with custom goals and reflective prompts instead of rigid blacklists."
 image: "/project-imgs/focus-flow.png"
 bannerImage: ""
 github: "https://github.com/pksh-labs/focus-flow"
@@ -8,7 +8,7 @@ demo: "https://chromewebstore.google.com/detail/focusflow/mgmpbdbngmeahcjpgmadbj
 year: 2025
 featured: true
 tech: ["React", "TypeScript", "Vite", "Tailwind CSS", "Web Extension APIs"]
-overview: "Built to solve a personal problem: staying focused during work hours. Instead of relying on rigid site blockers, FocusFlow supports custom goals and intentionality — a more mindful way to manage distractions."
+overview: "Built to solve a personal problem: staying focused during work hours. Instead of relying on rigid site blockers, FocusFlow supports custom goals and intentionality, a more mindful way to manage distractions."
 features:
   - "Blacklist and whitelist modes"
   - "Goal setting with website restrictions"

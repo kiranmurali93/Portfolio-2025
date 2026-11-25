@@ -9,9 +9,9 @@
       "bullets": [
         "Own backend delivery, release lifecycle (biweekly), and production monitoring for a voyage-optimization platform across a multi-service architecture including route generation, PDF generation, and a DB sync service.",
         "Designed and shipped a real-time alerting platform end-to-end: pluggable handler registry, alert lifecycle management, SSE delivery with DB-polling and retry, Kafka producer→consumer→email via Microsoft Graph, and configurable per-user thresholds.",
-        "Designed a multi-layered algorithm for detecting passed/skipped route points using distance-comparison heuristics, route alignment, and geometric projection fallback — significantly reducing false positives.",
+        "Designed a multi-layered algorithm for detecting passed/skipped route points using distance-comparison heuristics, route alignment, and geometric projection fallback, significantly reducing false positives.",
         "Owned a geospatial feature epic (~30 stories): interactive polygon zone management with coordinate validation, overlap detection, and archival lifecycle with dependency guards.",
-        "Rebuilt an acquired claims platform from scratch — designed architecture, built auth (Microsoft SSO, JWT rotation), core calculation engine, WebSocket-based file upload with S3 signed URLs, and an ETL service (cron-based API polling, CSV transformation, automated draft generation). Empty repo to production in 6 months.",
+        "Rebuilt an acquired claims platform from scratch: designed architecture, built auth (Microsoft SSO, JWT rotation), core calculation engine, WebSocket-based file upload with S3 signed URLs, and an ETL service (cron-based API polling, CSV transformation, automated draft generation). Empty repo to production in 6 months.",
         "Rolled out SonarQube with Jest coverage gates across 5 services. Introduced unit testing from scratch with dependency injection patterns.",
         "Fixed a production memory leak via compression-enabled caching with TTL tuning; resolved DB connection-pool exhaustion; moved API tokens from client to server-side brokers with domain restriction and CSP headers.",
         "Delivered 197 tickets and 1,000+ commits across 10 services; authored 19 engineering docs including org-wide API testability standards."
@@ -24,10 +24,10 @@
       "dates": "Feb 2024 – Jun 2025",
       "current": false,
       "bullets": [
-        "Built an internal financial platform in under a month enabling transaction visibility — it contributed to the company's seed round.",
-        "Owned PostgreSQL database design, schema migrations, and implemented complex Row-Level Security (RLS) policies and RPC functions across four products.",
+        "Built an internal financial platform in under a month enabling transaction visibility; it contributed to the company's seed round.",
+        "Owned PostgreSQL database design and schema migrations, and implemented complex Row-Level Security (RLS) policies and RPC functions across four products.",
         "Shipped a BSE-integrated Bonds platform, an FD platform, and an Unlisted Stocks marketplace.",
-        "Designed FD platform with WebView APIs, SSO authentication, and payouts management for seamless partner integrations.",
+        "Designed an FD platform with WebView APIs, SSO authentication, and payouts management for seamless partner integrations.",
         "Integrated third-party services (Digio for KYC, bank verification) to streamline onboarding and compliance."
       ]
     },
