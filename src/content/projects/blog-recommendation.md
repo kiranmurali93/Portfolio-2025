@@ -6,7 +6,7 @@ bannerImage: ""
 github: "https://github.com/kiranmurali93/blog-recommendation"
 demo: ""
 year: 2026
-order: 1
+order: 2
 featured: true
 tech: ["Go", "PostgreSQL", "pgvector", "Ollama", "Docker", "Embeddings", "RRF"]
 overview: "I read a lot of engineering blogs and kept losing track of good posts, so I built search that understands what an article is about. It was also an excuse to get hands-on with the whole local-LLM retrieval stack — embeddings, a vector database, hybrid ranking — without reaching for a hosted API for any piece. A personal blog recommender had a real corpus I care about and enough moving parts (ingestion, an LLM pipeline, search) to make the architecture decisions matter."
